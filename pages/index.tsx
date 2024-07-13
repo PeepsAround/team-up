@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 
 import { Inter } from "next/font/google";
-import { Navbar } from "./Navbar";
-import { Room } from "./Room";
+import { Navbar } from "../component/Navbar";
+import { Room } from "../component/Room";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -16,28 +16,35 @@ export default function Home() {
     const [joined, setJoined] = useState(false);
 
 	const getCam = async () => {
-        const stream = await window.navigator.mediaDevices.getUserMedia({
-            video: true,
-            audio: true
-        })
-        // MediaStream
-        const audioTrack = stream.getAudioTracks()[0]
-        const videoTrack = stream.getVideoTracks()[0]
-        setLocalAudioTrack(audioTrack);
-        setlocalVideoTrack(videoTrack);
-        if (!videoRef.current) {
-            return;
-        }
-        videoRef.current.srcObject = new MediaStream([videoTrack])
-        videoRef.current.play();
-        // MediaStream
+		try{
+			const stream = await window.navigator.mediaDevices.getUserMedia({
+				video: true,
+				audio: true
+			})
+			// MediaStream
+			const audioTrack = stream.getAudioTracks()[0]
+			const videoTrack = stream.getVideoTracks()[0]
+			setLocalAudioTrack(audioTrack);
+			setlocalVideoTrack(videoTrack);
+			if (!videoRef.current) {
+				return;
+			}
+			videoRef.current.srcObject = new MediaStream([videoTrack]);
+			videoRef.current.play().then(() => {
+			}).catch((error) => {
+			});
+			// MediaStream
+		}
+		catch (err){
+		}
     }
 
 	useEffect(() => {
-        if (videoRef && videoRef.current && !joined) {
-            getCam()
-        }
-    }, [videoRef, joined]);
+		if (videoRef.current && !joined) {
+		  getCam().catch((err) => {
+		  });
+		}
+	  }, [videoRef, joined]);
 
     const toggleDarkMode = () => {
         setDarkMode(!darkMode);
