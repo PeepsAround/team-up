@@ -1,23 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 
 import { Navbar } from "./Navbar";
+import io from 'socket.io-client';
 
 export const Room = ({
     name,
     localAudioTrack,
     localVideoTrack,
     setJoined,
-    darkMode,
-    setDarkMode,
-    toggleDarkMode
 }: {
     name: string,
     localAudioTrack: MediaStreamTrack | null,
     localVideoTrack: MediaStreamTrack | null,
-    setJoined: React.Dispatch<React.SetStateAction<boolean>>,
-    darkMode: boolean,
-    setDarkMode: React.Dispatch<React.SetStateAction<boolean>>,
-    toggleDarkMode: () => void
+    setJoined: React.Dispatch<React.SetStateAction<boolean>>
 }) => {
     const [lobby, setLobby] = useState(true);
     const [socket, setSocket] = useState<null | WebSocket>(null);
@@ -62,9 +57,15 @@ export const Room = ({
     }
 
     useEffect(() => {
-      const socket = new WebSocket(
-        "wss://ccme03ln92.execute-api.eu-north-1.amazonaws.com/production/",
-      ); // Replace with your WebSocket server URL
+		// const socket = new WebSocket(
+		// 	// "wss://ccme03ln92.execute-api.eu-north-1.amazonaws.com/production/",
+		// 	"ws://localhost:3000",
+		// ); // Replace with your WebSocket server URL
+		
+		const socket = io('https://localhost:3000', {
+			reconnectionAttempts: 5,
+			reconnectionDelay: 1000,
+		  });
 
 		function waitForAllICE(pc: RTCPeerConnection) {
 			return new Promise((fufill, reject) => {
@@ -216,17 +217,17 @@ export const Room = ({
         if (localVideoRef.current) {
             if (localVideoTrack) {
                 localVideoRef.current.srcObject = new MediaStream([localVideoTrack]);
-                localVideoRef.current.play();
+				localVideoRef.current.play().then(() => {
+				}).catch((error) => {
+				});
             }
         }
     }, [localVideoRef])
 
     return (
-        <div className={`flex flex-col h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-800'}`}>
-        <Navbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} name={name} />
-        <div className={`bg-${darkMode ? 'gray-900' : 'gray-200'} text-${darkMode ? 'white' : 'black'} h-full flex flex-col items-center justify-center py-8`}>
+        <div className={"flex flex-col h-screen bg-gray-900 text-white"}>
+        <div className={"bg-gray-900 text-white h-full flex flex-col items-center justify-center py-8"}>
             <div className="flex w-full">
-                {/* Left Part */}
                 <div className="flex-1 flex flex-col items-center justify-center">
                     <div className="w-3/4">
                         <video autoPlay width={400} height={400} ref={localVideoRef} className="m-2" />
@@ -238,21 +239,21 @@ export const Room = ({
                                     handleLeave();
                                     socket.send(JSON.stringify({ type: "leave" }));
                                 }
-                            }} className={`px-4 py-2 ${darkMode ? 'bg-blue-500' : 'bg-blue-600'} text-white rounded-md mr-4 ${darkMode ? 'hover:bg-blue-600' : 'hover:bg-blue-700'}`}>Skip</button>
+                            }} className="px-4 py-2 bg-blue-500 text-white rounded-md mr-4 hover:bg-blue-600">Skip</button>
                             <button onClick={() => {
                                 if (socket) {
                                     handleLeave();
                                     socket.send(JSON.stringify({ type: "disconnect" }));
                                     setJoined(false);
                                 }
-                            }} className={`px-4 py-2 ${darkMode ? 'bg-red-500' : 'bg-red-600'} text-white rounded-md ${darkMode ? 'hover:bg-red-600' : 'hover:bg-red-700'}`}>Leave</button>
+                            }} className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">Leave</button>
                         </div>
                     </div>
                 </div>
                 {/* Right Part */}
                 <div className="flex-1 flex flex-col items-center justify-center">
                     {!lobby && <div className=" w-1/2 text-left">You are now chatting with {partnerName}</div>}
-                    <div className={`w-1/2 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'} p-4 rounded-lg shadow-md h-[600px] overflow-y-auto flex flex-col-reverse`}>
+                    <div className="w-1/2 bg-gray-700 p-4 rounded-lg shadow-md h-[600px] overflow-y-auto flex flex-col-reverse">
                         {chatMessages.map((message, index) => {
                             if (message[0] === "You") {
                                 return (
@@ -266,7 +267,7 @@ export const Room = ({
                             } else {
                                 return (
                                 <div key={index} className="flex flex-col items-end mb-4">
-                                    <div className={`${darkMode ? 'bg-gray-200' : 'bg-[#FFFBF5]'} rounded-md p-2 text-gray-900 max-w-64 break-words min-w-16`}>
+                                    <div className="bg-gray-200rounded-md p-2 text-gray-900 max-w-64 break-words min-w-16">
                                         {message[1]}
                                     </div>
                                     <div className="text-xs">{message[0]}</div>
@@ -276,14 +277,14 @@ export const Room = ({
                         })}
                     </div>
                     <div className="mt-4 w-1/2">
-                        <input value={chat} placeholder="Message" onChange={(e) => setChat(e.target.value)} type="text" className={`w-full px-4 py-2 border ${darkMode ? 'border-gray-700 text-white bg-gray-700' : 'border-gray-300 bg-white'} rounded-md focus:outline-none`} />
+                        <input value={chat} placeholder="Message" onChange={(e) => setChat(e.target.value)} type="text" className="w-full px-4 py-2 border border-gray-700 text-white bg-gray-700 rounded-md focus:outline-none" />
                         <button onClick={() => {
                             if (sendingDc && chat.trim() !== "") {
                                 setChatMessages(prevMessages => [["You", chat], ...prevMessages]);
                                 sendingDc.send(chat);
                                 setChat('');
                             }
-                        }} className={`w-full mt-2 px-4 py-2 ${darkMode ? 'bg-green-500' : 'bg-green-600'} text-white rounded-md ${darkMode ? 'hover:bg-green-600' : 'hover:bg-green-700'}`}>Send</button>
+                        }} className="w-full mt-2 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">Send</button>
                     </div>
                 </div>
             </div>
