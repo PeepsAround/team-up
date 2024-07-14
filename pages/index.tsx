@@ -8,12 +8,12 @@ import { Room } from "../component/Room";
 const inter = Inter({ subsets: ["latin"] });
 
 export default function Home() {
-	const [name, setName] = useState("");
 	const [joined, setJoined] = useState(false);
 	const [localAudioTrack, setLocalAudioTrack] = useState<MediaStreamTrack | null>(null);
 	const [localVideoTrack, setlocalVideoTrack] = useState<MediaStreamTrack | null>(null);
 	const videoRef = useRef<HTMLVideoElement>(null);
 
+	const [name, setName] = useState("");
 
 	const getCam = async () => {
 		try {
@@ -44,7 +44,7 @@ export default function Home() {
 			getCam().catch((err) => {
 			});
 		}
-	}, [videoRef, joined]);
+	}, [videoRef]);
 
 
 	return (
