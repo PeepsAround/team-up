@@ -1,8 +1,10 @@
 import { Socket, io } from "socket.io-client";
 import { useEffect, useRef, useState } from "react";
 
-var URL = "http://192.168.186.88:3000";
-URL = "https://3c86-152-58-76-118.ngrok-free.app";
+// import { useSearchParams } from "react-router-dom";
+
+var URL = "http://ec2-3-109-121-189.ap-south-1.compute.amazonaws.com:3000";
+URL = "http://localhost:3000";
 
 export const Room = ({
     name,
@@ -14,6 +16,7 @@ export const Room = ({
     localAudioTrack: MediaStreamTrack | null,
     localVideoTrack: MediaStreamTrack | null,
 }) => {
+    // const [searchParams, setSearchParams] = useSearchParams();
     const [lobby, setLobby] = useState(true);
     const [socket, setSocket] = useState<null | Socket>(null);
     const [sendingPc, setSendingPc] = useState<null | RTCPeerConnection>(null);
@@ -25,11 +28,6 @@ export const Room = ({
     const localVideoRef = useRef<HTMLVideoElement>(null);
 
     useEffect(() => {
-        if (typeof window === "undefined") {
-            // Only run on the client
-            return;
-        }
-
         const socket = io(URL);
         socket.on('send-offer', async ({ roomId }) => {
             console.log("sending offer");
@@ -127,6 +125,16 @@ export const Room = ({
                 remoteVideoRef.current.srcObject.addTrack(track2)
                 //@ts-ignore
                 remoteVideoRef.current.play();
+                // if (type == 'audio') {
+                //     // setRemoteAudioTrack(track);
+                //     // @ts-ignore
+                //     remoteVideoRef.current.srcObject.addTrack(track)
+                // } else {
+                //     // setRemoteVideoTrack(track);
+                //     // @ts-ignore
+                //     remoteVideoRef.current.srcObject.addTrack(track)
+                // }
+                // //@ts-ignore
             }, 5000)
         });
 
@@ -161,7 +169,7 @@ export const Room = ({
                     if (!pc) {
                         console.error("sending pc not found")
                     } else {
-                        console.error(pc.ontrack)
+                        //console.error(pc.ontrack)
                     }
                     pc?.addIceCandidate(candidate)
                     return pc;
@@ -170,11 +178,6 @@ export const Room = ({
         })
 
         setSocket(socket);
-
-        // Clean up the socket connection when the component unmounts
-        return () => {
-            socket.disconnect();
-        };
     }, [name]);
 
     useEffect(() => {

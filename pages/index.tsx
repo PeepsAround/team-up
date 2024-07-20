@@ -7,36 +7,31 @@ export default function Index() {
     const [localAudioTrack, setLocalAudioTrack] = useState<MediaStreamTrack | null>(null);
     const [localVideoTrack, setLocalVideoTrack] = useState<MediaStreamTrack | null>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
+	
     const [joined, setJoined] = useState(false);
 
     const getCam = async () => {
-        try {
-            const stream = await window.navigator.mediaDevices.getUserMedia({
-                video: true,
-                audio: true
-            });
+		const stream = await window.navigator.mediaDevices.getUserMedia({
+			video: true,
+			audio: true
+		});
 
-            const audioTrack = stream.getAudioTracks()[0];
-            const videoTrack = stream.getVideoTracks()[0];
-            setLocalAudioTrack(audioTrack);
-            setLocalVideoTrack(videoTrack);
-
-            if (videoRef.current) {
-                videoRef.current.srcObject = new MediaStream([videoTrack]);
-                videoRef.current.onloadedmetadata = () => {
-                    videoRef.current?.play().catch(err => console.error("Video play error:", err));
-                };
-            }
-        } catch (err) {
-            console.error("Error accessing camera and microphone:", err);
-        }
+		const audioTrack = stream.getAudioTracks()[0];
+		const videoTrack = stream.getVideoTracks()[0];
+		setLocalAudioTrack(audioTrack);
+		setLocalVideoTrack(videoTrack);
+		if (!videoRef.current) {
+			return;
+		}
+		videoRef.current.srcObject = new MediaStream([videoTrack]);
+		videoRef.current.play();
     };
 
     useEffect(() => {
-        if (typeof window !== "undefined") {
-            getCam();
+        if (videoRef && videoRef.current) {
+            getCam()
         }
-    }, []);
+    }, [videoRef]);
 
     if (!joined) {
         return (
